@@ -14,4 +14,5 @@ export interface Schema {
   skipRemotes?: string[];
   verbose: boolean;
   pathToManifestFile?: string;
+  moduleFederationConfigOptions?: { path: string };
 }

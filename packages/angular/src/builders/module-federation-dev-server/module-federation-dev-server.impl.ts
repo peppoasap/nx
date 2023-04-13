@@ -45,6 +45,36 @@ export function executeModuleFederationDevServerBuilder(
     pathToManifestFile = userPathToManifestFile;
   }
 
+  let pathToModuleFederationConfigFile = join(
+    context.workspaceRoot,
+    project.sourceRoot,
+    'module-federation.config.js'
+  );
+
+  if (options.moduleFederationConfigOptions) {
+    const userPathToModuleFederationConfigFile = join(
+      context.workspaceRoot,
+      options.moduleFederationConfigOptions.path
+    );
+
+    if (!existsSync(userPathToModuleFederationConfigFile)) {
+      throw new Error(
+        `The provided Module Federation config file path does not exist. Please check the file exists at "${userPathToModuleFederationConfigFile}".`
+      );
+    } else if (
+      extname(userPathToModuleFederationConfigFile) !== '.js' &&
+      extname(userPathToModuleFederationConfigFile) !== '.ts'
+    ) {
+      throw new Error(
+        `The Module Federation config file must be a JS or TS file. Please ensure the file at ${userPathToModuleFederationConfigFile} is a JS or TS file. Extension found was "${extname(
+          userPathToModuleFederationConfigFile
+        )}".`
+      );
+    }
+
+    pathToModuleFederationConfigFile = userPathToModuleFederationConfigFile;
+  }
+
   validateDevRemotes(options, workspaceProjects);
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
@@ -52,7 +82,8 @@ export function executeModuleFederationDevServerBuilder(
     project,
     context,
     workspaceProjects,
-    remotesToSkip
+    remotesToSkip,
+    pathToModuleFederationConfigFile
   );
   const dynamicRemotes = getDynamicRemotes(
     project,

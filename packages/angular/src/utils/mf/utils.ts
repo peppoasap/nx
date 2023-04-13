@@ -44,6 +44,9 @@ export async function getModuleFederationConfig(
   determineRemoteUrl: (remote: string) => string,
   options: { isServer: boolean } = { isServer: false }
 ) {
+  //check if mfConfig is from a js or ts configuration and take default values accordingly
+  mfConfig = (mfConfig as any).default ?? mfConfig;
+
   let projectGraph: ProjectGraph;
   try {
     projectGraph = readCachedProjectGraph();

@@ -68,20 +68,21 @@ export function getStaticRemotes(
   project: ProjectConfiguration,
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
-  remotesToSkip: Set<string>
-): string[] {
-  const mfConfigPath = join(
+  remotesToSkip: Set<string>,
+  pathToModuleFederationConfigFile = join(
     context.workspaceRoot,
-    project.root,
+    project.sourceRoot,
     'module-federation.config.js'
-  );
-
+  )
+): string[] {
   let mfeConfig: { remotes: Remotes };
   try {
-    mfeConfig = require(mfConfigPath);
+    mfeConfig = resolveModuleFederationConfigFile(
+      pathToModuleFederationConfigFile
+    );
   } catch {
     throw new Error(
-      `Could not load ${mfConfigPath}. Was this project generated with "@nx/angular:host"?`
+      `Could not load ${pathToModuleFederationConfigFile}. Was this project generated with "@nrwl/angular:host"?`
     );
   }
 
@@ -101,8 +102,8 @@ export function getStaticRemotes(
   if (invalidStaticRemotes.length) {
     throw new Error(
       invalidStaticRemotes.length === 1
-        ? `Invalid static remote configured in "${mfConfigPath}": ${invalidStaticRemotes[0]}.`
-        : `Invalid static remotes configured in "${mfConfigPath}": ${invalidStaticRemotes.join(
+        ? `Invalid static remote configured in "${pathToModuleFederationConfigFile}": ${invalidStaticRemotes[0]}.`
+        : `Invalid static remotes configured in "${pathToModuleFederationConfigFile}": ${invalidStaticRemotes.join(
             ', '
           )}.`
     );
@@ -126,4 +127,44 @@ export function validateDevRemotes(
         : `Invalid dev remotes provided: ${invalidDevRemotes.join(', ')}.`
     );
   }
+}
+
+export function resolveModuleFederationConfigFile(path: string): {
+  remotes: Remotes;
+} {
+  tsNodeRegister(path);
+  const mfeConfigFile = require(path);
+  console.log('mfeConfigFile', mfeConfigFile);
+  return mfeConfigFile.default ?? mfeConfigFile;
+}
+
+export function tsNodeRegister(file: string = '', tsConfig?: string) {
+  if (!file?.endsWith('.ts')) return;
+
+  // Avoid double-registering which can lead to issues type-checking already transformed files.
+  if (isRegistered()) return;
+
+  // Register TS compiler lazily
+  require('ts-node').register({
+    project: tsConfig,
+    compilerOptions: {
+      module: 'CommonJS',
+      types: ['node'],
+    },
+  });
+
+  // Register paths in tsConfig
+  const tsconfigPaths = require('tsconfig-paths');
+  const { absoluteBaseUrl: baseUrl, paths } =
+    tsconfigPaths.loadConfig(tsConfig);
+  if (baseUrl && paths) {
+    tsconfigPaths.register({ baseUrl, paths });
+  }
+}
+
+export function isRegistered() {
+  return (
+    require.extensions['.ts'] != undefined ||
+    require.extensions['.tsx'] != undefined
+  );
 }
