@@ -2,6 +2,8 @@ import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json'
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { Remotes } from '@nx/devkit';
+import { getRootTsConfigPath } from 'nx/src/utils/typescript';
+import { __importDefault } from 'tslib';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -71,7 +73,7 @@ export function getStaticRemotes(
   remotesToSkip: Set<string>,
   pathToModuleFederationConfigFile = join(
     context.workspaceRoot,
-    project.sourceRoot,
+    project.root,
     'module-federation.config.js'
   )
 ): string[] {
@@ -132,13 +134,13 @@ export function validateDevRemotes(
 export function resolveModuleFederationConfigFile(path: string): {
   remotes: Remotes;
 } {
-  tsNodeRegister(path);
-  const mfeConfigFile = require(path);
-  console.log('mfeConfigFile', mfeConfigFile);
-  return mfeConfigFile.default ?? mfeConfigFile;
+  const tsConfig = process.env.NX_TS_CONFIG_PATH ?? getRootTsConfigPath();
+  tsNodeRegister(path, tsConfig);
+  const mfeConfigFile = __importDefault(require(path)).default;
+  return mfeConfigFile;
 }
 
-export function tsNodeRegister(file: string = '', tsConfig?: string) {
+function tsNodeRegister(file: string = '', tsConfig?: string) {
   if (!file?.endsWith('.ts')) return;
 
   // Avoid double-registering which can lead to issues type-checking already transformed files.
@@ -153,6 +155,8 @@ export function tsNodeRegister(file: string = '', tsConfig?: string) {
     },
   });
 
+  if (!tsConfig) return;
+
   // Register paths in tsConfig
   const tsconfigPaths = require('tsconfig-paths');
   const { absoluteBaseUrl: baseUrl, paths } =
@@ -162,9 +166,9 @@ export function tsNodeRegister(file: string = '', tsConfig?: string) {
   }
 }
 
-export function isRegistered() {
+function isRegistered() {
   return (
-    require.extensions['.ts'] != undefined ||
-    require.extensions['.tsx'] != undefined
+    require.extensions['.ts'] !== undefined ||
+    require.extensions['.tsx'] !== undefined
   );
 }

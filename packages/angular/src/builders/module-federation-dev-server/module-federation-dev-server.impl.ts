@@ -47,14 +47,14 @@ export function executeModuleFederationDevServerBuilder(
 
   let pathToModuleFederationConfigFile = join(
     context.workspaceRoot,
-    project.sourceRoot,
+    project.root,
     'module-federation.config.js'
   );
 
-  if (options.moduleFederationConfigOptions) {
+  if (options.moduleFederationConfig) {
     const userPathToModuleFederationConfigFile = join(
       context.workspaceRoot,
-      options.moduleFederationConfigOptions.path
+      options.moduleFederationConfig
     );
 
     if (!existsSync(userPathToModuleFederationConfigFile)) {
