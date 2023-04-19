@@ -3,7 +3,6 @@ import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { Remotes } from '@nx/devkit';
 import { getRootTsConfigPath } from 'nx/src/utils/typescript';
-import { __importDefault } from 'tslib';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -84,7 +83,7 @@ export function getStaticRemotes(
     );
   } catch {
     throw new Error(
-      `Could not load ${pathToModuleFederationConfigFile}. Was this project generated with "@nrwl/angular:host"?`
+      `Could not load ${pathToModuleFederationConfigFile}. Was this project generated with "@nx/angular:host"?`
     );
   }
 
@@ -136,7 +135,7 @@ export function resolveModuleFederationConfigFile(path: string): {
 } {
   const tsConfig = process.env.NX_TS_CONFIG_PATH ?? getRootTsConfigPath();
   tsNodeRegister(path, tsConfig);
-  const mfeConfigFile = __importDefault(require(path)).default;
+  const mfeConfigFile = require(path);
   return mfeConfigFile;
 }
 

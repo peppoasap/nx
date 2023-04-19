@@ -1,4 +1,3 @@
-import { __importDefault } from 'tslib';
 import { merge } from 'webpack-merge';
 
 export async function mergeCustomWebpackConfig(
@@ -28,7 +27,7 @@ export async function mergeCustomWebpackConfig(
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   tsNodeRegister(path, tsConfig);
 
-  const customWebpackConfig = __importDefault(require(path));
+  const customWebpackConfig = require(path);
   // If the user provides a configuration in TS file
   // then there are 2 cases for exporting an object. The first one is:
   // `module.exports = { ... }`. And the second one is:
